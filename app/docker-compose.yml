@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  rag-api:
+    build: .
+    container_name: crewai_rag_api
+    platform: linux/arm64
+    environment:
+      DATABASE_URL: "postgresql://${DB_USER}:${DB_PASSWORD}@postgres:${DB_PORT:-5432}/${DB_NAME}"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+      - ollama
+      - phoenix
+    restart: always
+
+  # Phoenix (Arize Phoenix) observability / UI
+  phoenix:
+    image: arizephoenix/phoenix:latest
+    container_name: crewai_phoenix
+    platform: linux/arm64
+    ports:
+      - "6006:6006"            # Phoenix UI / API (local default port; change if needed)
+    environment:
+      # Use the same Postgres + Redis as your app (adapt to your .env variables)
+      DATABASE_URL: "postgresql://${DB_USER}:${DB_PASSWORD}@postgres:${DB_PORT:-5432}/${DB_NAME}"
+      REDIS_URL: "redis://redis:6379/0"
+      # Bind Phoenix to 0.0.0.0 so it is reachable from host
+      PHOENIX_HOST: "0.0.0.0"
+      PHOENIX_PORT: "6006"
+      # Optional: a secret key (generate a strong value) and other Phoenix-specific env vars
+      # PHOENIX_SECRET_KEY: "replace-with-strong-secret"
+      # If you plan to use Phoenix Cloud or remote collectors, add PHOENIX_API_KEY / PHOENIX_COLLECTOR_ENDPOINT here.
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - phoenix_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:6006/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    restart: always
+
+  # The OpenWebUI frontend service
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    platform: linux/arm64
+    ports:
+      - "3000:8080"
+    depends_on:
+      - ollama
+    volumes:
+      - openwebui_data:/data
+    restart: always
+
+  # PostgreSQL with pgvector extension
+  postgres:
+    image: pgvector/pgvector:0.8.1-pg18-trixie
+    container_name: crewai_postgres
+    platform: linux/arm64
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: always
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: crewai_redis
+    platform: linux/arm64
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  # Ollama
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    platform: linux/arm64
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    restart: always
+
+volumes:
+  postgres_data:
+  ollama_data:
+  openwebui_data:
+  phoenix_data:
