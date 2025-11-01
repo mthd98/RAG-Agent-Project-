@@ -9,9 +9,8 @@ python-dotenv
 psycopg2-binary==2.9.9
 crewai
 crewai-tools
-# Removed ragas and datasets due to NumPy conflicts in Docker
-# ragas
-# datasets
+ragas
+datasets
 rank_bm25
 llama-index-retrievers-bm25
 sentencepiece

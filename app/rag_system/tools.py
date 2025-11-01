@@ -29,7 +29,7 @@ def search_collection(
     Perform a search query against a specified collection in the vector database.
     Args:
         query_text (str): The text query to search for.
-        similarity_top_k (int): Number of top similar documents to retrieve 20.
+        similarity_top_k (int): Number of top similar documents.
         filters (dict): Optional filters to apply to the search.
         rerank (bool): Whether to rerank the results.
         rerank_top_n (int): Number of top results to consider for reranking.
