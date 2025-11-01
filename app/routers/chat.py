@@ -56,7 +56,8 @@ async def chat_completions(request: schemas.ChatCompletionRequest):
     # You could potentially build a more complex query or context
     # from the message history if needed.
     last_user_message = next((msg.content for msg in reversed(request.messages) if msg.role == 'user'), None)
-
+    messages = [f"{msg.role}:{msg.content}"for msg in request.messages]
+    history = "\n".join(messages)
     if not last_user_message:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -67,8 +68,9 @@ async def chat_completions(request: schemas.ChatCompletionRequest):
 
     try:
         # Get the response from your RAG agent
-        rag_response = await rag_agent_instance(last_user_message) # Assuming run is async or use asyncio.to_thread
+        rag_response = await rag_agent_instance(history,last_user_message) 
         raw = rag_response.raw
+        
 
         # Format the response according to the OpenAI schema
         response_message = schemas.ResponseMessage(content=raw)

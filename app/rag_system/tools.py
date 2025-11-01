@@ -20,7 +20,7 @@ indexer = PgVectorIndexer(
 @tool("search_collection")
 def search_collection(
     query_text: str,
-    similarity_top_k: int = 10,
+    similarity_top_k: int = 20,
     filters: Optional[dict] = None,
     rerank: bool = False,
     rerank_top_n: int = 10
@@ -29,7 +29,7 @@ def search_collection(
     Perform a search query against a specified collection in the vector database.
     Args:
         query_text (str): The text query to search for.
-        similarity_top_k (int): Number of top similar documents to retrieve 10.
+        similarity_top_k (int): Number of top similar documents to retrieve 20.
         filters (dict): Optional filters to apply to the search.
         rerank (bool): Whether to rerank the results.
         rerank_top_n (int): Number of top results to consider for reranking.
@@ -51,7 +51,6 @@ def search_collection(
     for i, node_with_score in enumerate(response.source_nodes):
         node = node_with_score.node
 
-        page_number = node.metadata.get("page_label", "N/A")
         meta_test.append({
             "text": node.get_text(),
             "filename": node.metadata['origin']['filename'],
