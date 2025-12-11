@@ -1,14 +1,11 @@
-from fastapi import Security, HTTPException, status
-from fastapi.security import APIKeyHeader
 from core.config import settings
 from fastapi import Security, HTTPException, status, Request # Import Request
 from fastapi.security import APIKeyHeader, HTTPBearer, HTTPAuthorizationCredentials # Import HTTPBearer related classes
-from core.config import settings
 import logging # Import logging
 
 logger = logging.getLogger(__name__) # Set up logger for this module
 
-# Define the custom X-API-Key header (optional now, but good to keep for direct API calls)
+# Define the custom X-API-Key header 
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False) # Set auto_error=False
 
 # Define the standard Authorization: Bearer header scheme
